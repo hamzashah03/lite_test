@@ -1,4 +1,14 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[8]:
+
+
 import numpy as np
+
+
+# In[9]:
+
 
 class logLik:
     """
@@ -8,6 +18,7 @@ class logLik:
         self.value = value
         self.nobs = nobs
         self.df = df
+        
 
     # String representation of the class
     def __repr__(self):
@@ -44,8 +55,11 @@ class Bernoulli:
     
     def logLik(self):
         """ Return a logLik object for the Bernoulli model"""
-        res = logLik(value = self.maxLogLik, nobs = self.nobs, df = 1)          # df always 1 but in R package it's shown as a function
+        res = logLik(value = self.maxLogLik, nobs = self.nobs, df = len(self.coef()))          
         return res
+    
+    def __repr__(self):
+        return f"<mle = {self.mle}, vcov = {self.vcov}, nobs = {self.nobs}, obs_data = {self.obs_data}, maxLogLik = {self.maxLogLik}>"
         
 
 
@@ -83,7 +97,7 @@ def fitBernoulli(data):
     vcov = np.array(mle * (1-mle) / nobs)
 
     # No. of success and failures
-    n1 = sum(obs_data)                              # Should we name this n_succ and n_fail instead?
+    n1 = sum(obs_data)                              
     n0 = nobs - n1
 
     # Compute Maximum Log-Likelihood
@@ -92,4 +106,16 @@ def fitBernoulli(data):
     res = Bernoulli(mle, vcov, nobs, obs_data, maxLoglik)
 
     return res
+
+
+# In[10]:
+
+
+# get_ipython().system('jupyter nbconvert --to python bernoulli.ipynb')
+
+
+# In[ ]:
+
+
+
 
