@@ -1,28 +1,19 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[6]:
+
+
 import numpy as np
-from scipy.stats import binom
-from bernoulli import Bernoulli
+import pandas as pd
+from scipy.stats import binom, genpareto
+from bernoulli import Bernoulli, logLik, fitBernoulli
 
 
-# Define logLik class to be used for future functions
-class logLik:
-    """
-    Class representing the maximised log-likelihood
-    """
-    def __init__(self, value, nobs, df):
-        self.value = value
-        self.nobs = nobs
-        self.df = df
+# In[7]:
 
-        return value
-
-    # String representation of the class
-    def __repr__(self):
-        return f"<Value = {self.value:.4f}, nobs = {self.nobs}, df = {self.df}>"
-    
-    
-    
 # _Class to avoid naming clash (rename or confirm if this is an issue)
-class logLikVector_class(np.ndarray):                           # Subclass of a np.array to keep np.array while adding more attributes
+class logLikVec(np.ndarray):                           # Subclass of a np.array to keep np.array while adding more attributes
     """
     Class to represent a vector of log-likelihood contributions from individual observations.
     """
@@ -37,7 +28,8 @@ class logLikVector_class(np.ndarray):                           # Subclass of a 
     
     # This part might be unnecessary as in theory should adjust the vector or create a new logLikVector from view casting but probably worth keeping
     def __array_finalize__(self, obj):          
-        if obj is None: return
+        if obj is None: 
+            return
 
         # Copy over the previous attributes
         getattr(obj, 'nobs', None)            # In theory if the np.array got sliced into a smaller array technically the no. of observations should decrease
@@ -52,6 +44,10 @@ class logLikVector_class(np.ndarray):                           # Subclass of a 
         """
         return logLik(value = np.sum(self), nobs = self.nobs, df = self.df)
 
+    def total(self):
+        """Return the sum of all values in the array"""
+        return np.sum(self)
+        
 
 # Creating separate functions for logLikVector.Bernoulli and GP
 
@@ -81,7 +77,7 @@ def logLikVector_Bernoulli(object, pars = None, **kwargs):
     else:
         val = binom.logpmf(object.obs_data, object.nobs, prob)
 
-    return logLikVector_class(val, object.nobs, n_pars)
+    return logLikVec(val, object.nobs, n_pars)
 
 
 def logLikVector_GP(object, pars = None, **kwargs):
@@ -105,6 +101,8 @@ def logLikVector_GP(object, pars = None, **kwargs):
     n_pars = len(pars)
     sigma = pars[0]
     xi = pars[1]
+    
+    
 
     # Calculate log-likelihood contributions
 
@@ -112,8 +110,17 @@ def logLikVector_GP(object, pars = None, **kwargs):
 
 def logLikVector(object, pars = None, **kwargs):            # Dunno if need the kwargs here or not (Prob need since _bernoulli and _GP has kwargs
     if type(object) == Bernoulli:
-        logLikVector_Bernoulli(object, pars)
-    # elif isinstance(object, GP):
-    #     logLikVector_GP(object, pars)
+        return logLikVector_Bernoulli(object, pars)
+    elif isinstance(object, GP):
+        return logLikVector_GP(object, pars)
     else:
-        raise ValueError("'object' must be either a Bernoulli or GP object")
+        raise ValueError("'object' must be either a Bernoulli or GP object")    # Define logLik class to be used for future functions
+
+
+# In[ ]:
+
+
+# get_ipython().system('jupyter nbconvert --to python bernoulli.ipynb')
+
+
+# %%
